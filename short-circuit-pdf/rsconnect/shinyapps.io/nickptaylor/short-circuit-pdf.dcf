@@ -1,0 +1,12 @@
+name: short-circuit-pdf
+title: short-circuit-pdf
+username:
+account: nickptaylor
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2396103
+bundleId: 3219189
+url: https://nickptaylor.shinyapps.io/short-circuit-pdf/
+when: 1591115476.35434
+asMultiple: FALSE
+asStatic: FALSE
