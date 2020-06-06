@@ -87,23 +87,9 @@ tab_load <- tabItem(tabName = 'load',
                 # REACTIVE UI INPUT: Selector - height of section headings.
                 uiOutput("selector_section_heights"),
                 
-                # REACTIVE UI INPUT: Selector - sections.
-                conditionalPanel(
-                    condition = "output.selector_analysis_sections",
-                    pretty_label(
-                        strong("Select section names"),
-                        "Select", em("markers"), "indicating heading words",
-                        "where sections should be split.  The names can be",
-                        "adjusted with the", em("Rename Section Heading"),
-                        "button below.")
-                ), 
-                div(style = 'overflow-y: auto; max-height: 10vh', 
-                    uiOutput("selector_analysis_sections")
-                ),
-                
                 # TRIGGER MODAL: Rename sections and inspect corpus.
                 conditionalPanel(
-                    condition = "output.selector_analysis_sections",
+                    condition = "input.selected_height",
                     actionButton(
                         'action_rename_section_headings',
                         "Rename Section Headings",
@@ -297,7 +283,7 @@ server <- function(input, output) {
         df <- df_doc_raw() %>%
             select(height, text) %>% 
             group_by(height) %>%
-            summarise(words = str_c(text, collapse = " "))
+            summarise(words = str_c(text, collapse = " "), .groups = 'drop')
        
         if (input$inspect_doc_limit_chars) {
             df %<>%
@@ -350,7 +336,7 @@ server <- function(input, output) {
     # REACTIVE UI INPUT: Selects height of candidate section names.
     output$selector_section_heights <- renderUI({
         
-        # Get font hieghts for documents ONLY IF there are less
+        # Get font heights for documents ONLY IF there are less
         # than 1000 candidate words.  This prevents the server becoming
         # unresponsive.
         heights <- df_doc_font_filter() %>% 
@@ -377,21 +363,9 @@ server <- function(input, output) {
         get_section_lookup(df_doc_font_filter(), input$selected_height)
     })
     
-    # REACTIVE UI INPUT: Select sections of interest.
-    output$selector_analysis_sections <- renderUI({
-        choices <- df_section_lookup_raw() %>% 
-            distinct(heading) %>% 
-            pull(heading)
-        checkboxGroupInput(
-            "selected_sections",
-            label = NULL,
-            choices = choices,
-            selected = choices[c(1, 2)])
-    })
     observe({
-        values$section_lookup <- 
-            df_section_lookup_raw() %>% 
-                filter(heading %in% input$selected_sections) %>% 
+        values$section_lookup <-
+            df_section_lookup_raw() %>%
                 distinct(heading, .keep_all = TRUE) %>%
                 mutate(renamed_heading = heading)
     })
@@ -491,7 +465,7 @@ server <- function(input, output) {
         req(nrow(corpus()) > 0)
         choices = corpus()$heading
         checkboxGroupInput("selected_sections_visualise",
-                    label = "Choose section font height:",
+                    label = "Choose sections",
                     choices = choices,
                     selected = choices[c(1, 2)]
         )
@@ -508,7 +482,7 @@ server <- function(input, output) {
         )
         
         # Filter visualisation by user specified section headings.
-        df_plt <- tf_idf() %>% 
+        df_plt <- tf_idf() %>%
             filter(heading %in% input$selected_sections_visualise)
         
         # Plot graph.
