@@ -31,7 +31,7 @@ pretty_label <- function(main, ...) {
 # ------------------------------------------------------------------------- 
 
 header <- dashboardHeader(
-    title = "PDF Explorer",
+    title = "Short Circuit",
     titleWidth = '10%'
 )
 
